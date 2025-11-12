@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import PaymentForm from '@/components/PaymentForm';
 
 interface BookingDialogProps {
   open: boolean;
@@ -23,6 +24,8 @@ const BookingDialog = ({ open, onOpenChange, serviceId, onSuccess }: BookingDial
   const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [bookingId, setBookingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (serviceId) {
@@ -44,7 +47,7 @@ const BookingDialog = ({ open, onOpenChange, serviceId, onSuccess }: BookingDial
     if (!user || !serviceId) return;
 
     setLoading(true);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('bookings')
       .insert({
         client_id: user.id,
@@ -53,7 +56,9 @@ const BookingDialog = ({ open, onOpenChange, serviceId, onSuccess }: BookingDial
         address,
         notes,
         status: 'pending'
-      });
+      })
+      .select()
+      .single();
 
     setLoading(false);
 
@@ -64,12 +69,28 @@ const BookingDialog = ({ open, onOpenChange, serviceId, onSuccess }: BookingDial
         variant: 'destructive'
       });
     } else {
-      onSuccess();
-      onOpenChange(false);
-      setScheduledDate('');
-      setAddress('');
-      setNotes('');
+      setBookingId(data.id);
+      setShowPayment(true);
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    toast({
+      title: 'Success',
+      description: 'Your booking has been confirmed and payment processed!',
+    });
+    onSuccess();
+    onOpenChange(false);
+    setScheduledDate('');
+    setAddress('');
+    setNotes('');
+    setShowPayment(false);
+    setBookingId(null);
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPayment(false);
+    setBookingId(null);
   };
 
   if (!service) return null;
@@ -80,51 +101,62 @@ const BookingDialog = ({ open, onOpenChange, serviceId, onSuccess }: BookingDial
         <DialogHeader>
           <DialogTitle>Book {service.name}</DialogTitle>
           <DialogDescription>
-            Fill in the details to schedule your appointment
+            {showPayment ? 'Complete your payment' : 'Fill in the details to schedule your appointment'}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="date">Date & Time</Label>
-            <Input
-              id="date"
-              type="datetime-local"
-              value={scheduledDate}
-              onChange={(e) => setScheduledDate(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="address">Service Address</Label>
-            <Input
-              id="address"
-              type="text"
-              placeholder="123 Main St, City, State"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="notes">Additional Notes (Optional)</Label>
-            <Textarea
-              id="notes"
-              placeholder="Any specific requirements or details..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-            />
-          </div>
-          <div className="bg-muted p-4 rounded-lg">
-            <div className="flex justify-between items-center">
-              <span className="font-semibold">Total Cost:</span>
-              <span className="text-2xl font-bold text-primary">${service.price}</span>
+        {!showPayment ? (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="date">Date & Time</Label>
+              <Input
+                id="date"
+                type="datetime-local"
+                value={scheduledDate}
+                onChange={(e) => setScheduledDate(e.target.value)}
+                required
+              />
             </div>
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Creating Booking...' : 'Confirm Booking'}
-          </Button>
-        </form>
+            <div className="space-y-2">
+              <Label htmlFor="address">Service Address</Label>
+              <Input
+                id="address"
+                type="text"
+                placeholder="123 Main St, City, State"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes">Additional Notes (Optional)</Label>
+              <Textarea
+                id="notes"
+                placeholder="Any specific requirements or details..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+              />
+            </div>
+            <div className="bg-muted p-4 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold">Total Cost:</span>
+                <span className="text-2xl font-bold text-primary">${service.price}</span>
+              </div>
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Creating Booking...' : 'Continue to Payment'}
+            </Button>
+          </form>
+        ) : (
+          bookingId && (
+            <PaymentForm
+              bookingId={bookingId}
+              amount={parseFloat(service.price)}
+              onSuccess={handlePaymentSuccess}
+              onCancel={handlePaymentCancel}
+            />
+          )
+        )}
       </DialogContent>
     </Dialog>
   );
