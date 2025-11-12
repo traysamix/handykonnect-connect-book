@@ -74,11 +74,23 @@ const BookingDialog = ({ open, onOpenChange, serviceId, onSuccess }: BookingDial
     }
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
     toast({
       title: 'Success',
       description: 'Your booking has been confirmed and payment processed!',
     });
+    
+    // Send booking confirmation email
+    if (bookingId) {
+      try {
+        await supabase.functions.invoke('send-booking-email', {
+          body: { bookingId, type: 'confirmation' }
+        });
+      } catch (error) {
+        console.error('Error sending confirmation email:', error);
+      }
+    }
+    
     onSuccess();
     onOpenChange(false);
     setScheduledDate('');
