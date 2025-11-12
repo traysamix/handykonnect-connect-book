@@ -55,26 +55,6 @@ const PaymentFormInner = ({ bookingId, amount, onSuccess, onCancel }: PaymentFor
         throw new Error('Payment element not found');
       }
 
-      // Send payment receipt email
-      try {
-        // Get payment ID from the database
-        const { data: payments } = await supabase
-          .from('payments')
-          .select('id')
-          .eq('booking_id', bookingId)
-          .eq('status', 'completed')
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (payments && payments.length > 0) {
-          await supabase.functions.invoke('send-payment-receipt', {
-            body: { paymentId: payments[0].id }
-          });
-        }
-      } catch (error) {
-        console.error('Error sending payment receipt:', error);
-      }
-
       toast({
         title: 'Payment Successful',
         description: 'Your booking has been confirmed!',

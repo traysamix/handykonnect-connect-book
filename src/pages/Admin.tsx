@@ -8,13 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Users, Wrench, Calendar, DollarSign } from 'lucide-react';
-import ServiceManagement from '@/components/ServiceManagement';
-import { useToast } from '@/hooks/use-toast';
 
 const Admin = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
   const [stats, setStats] = useState({
     totalBookings: 0,
@@ -24,7 +21,6 @@ const Admin = () => {
   });
   const [bookings, setBookings] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
-  const [payments, setPayments] = useState<any[]>([]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -45,7 +41,6 @@ const Admin = () => {
       fetchStats();
       fetchBookings();
       fetchClients();
-      fetchPayments();
     }
   }, [profile]);
 
@@ -105,69 +100,12 @@ const Admin = () => {
     }
   };
 
-  const fetchPayments = async () => {
-    const { data } = await supabase
-      .from('payments')
-      .select(`
-        *,
-        booking:bookings(
-          *,
-          service:services(*),
-          client:profiles(*)
-        )
-      `)
-      .eq('status', 'completed')
-      .order('created_at', { ascending: false })
-      .limit(10);
-    
-    if (data) {
-      setPayments(data);
-    }
-  };
-
   const updateBookingStatus = async (bookingId: string, status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled') => {
     await supabase
       .from('bookings')
       .update({ status })
       .eq('id', bookingId);
-    
-    // Send email notification
-    try {
-      await supabase.functions.invoke('send-booking-email', {
-        body: { bookingId, type: 'update' }
-      });
-    } catch (error) {
-      console.error('Error sending email:', error);
-    }
-    
     fetchBookings();
-  };
-
-  const handleRefund = async (paymentId: string) => {
-    if (!confirm('Are you sure you want to process a refund for this payment?')) return;
-
-    try {
-      const { error } = await supabase.functions.invoke('process-refund', {
-        body: { paymentId }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: 'Refund Processed',
-        description: 'The payment has been refunded successfully.'
-      });
-      
-      fetchPayments();
-      fetchBookings();
-      fetchStats();
-    } catch (error: any) {
-      toast({
-        title: 'Refund Failed',
-        description: error.message,
-        variant: 'destructive'
-      });
-    }
   };
 
   if (loading || !profile) {
@@ -231,8 +169,6 @@ const Admin = () => {
         <Tabs defaultValue="bookings" className="space-y-4">
           <TabsList>
             <TabsTrigger value="bookings">Recent Bookings</TabsTrigger>
-            <TabsTrigger value="services">Services</TabsTrigger>
-            <TabsTrigger value="payments">Payments</TabsTrigger>
             <TabsTrigger value="clients">Clients</TabsTrigger>
           </TabsList>
           
@@ -280,57 +216,6 @@ const Admin = () => {
                               </Button>
                             )}
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="services" className="space-y-4">
-            <ServiceManagement />
-          </TabsContent>
-
-          <TabsContent value="payments" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Payments</CardTitle>
-                <CardDescription>Completed payments with refund options</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {payments.map((payment) => (
-                    <Card key={payment.id} className="bg-gradient-card">
-                      <CardContent className="pt-6">
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-2 flex-1">
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-semibold">{payment.booking.service.name}</h3>
-                              <Badge className={payment.status === 'refunded' ? 'bg-gray-500' : 'bg-green-500'}>
-                                {payment.status}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              Client: {payment.booking.client.full_name} ({payment.booking.client.email})
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Payment Date: {new Date(payment.created_at).toLocaleString()}
-                            </p>
-                            <p className="text-lg font-bold text-primary">
-                              ${payment.amount}
-                            </p>
-                          </div>
-                          {payment.status === 'completed' && (
-                            <Button 
-                              size="sm" 
-                              variant="destructive"
-                              onClick={() => handleRefund(payment.id)}
-                            >
-                              Process Refund
-                            </Button>
-                          )}
                         </div>
                       </CardContent>
                     </Card>

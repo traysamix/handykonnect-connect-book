@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
-import { Wrench, LogOut, LayoutDashboard, Calendar as CalendarIcon, Receipt } from 'lucide-react';
+import { Wrench, LogOut, LayoutDashboard } from 'lucide-react';
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -23,18 +23,6 @@ const Navbar = () => {
                 <Button variant="outline" size="sm" className="gap-2">
                   <LayoutDashboard className="h-4 w-4" />
                   Dashboard
-                </Button>
-              </Link>
-              <Link to="/calendar">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <CalendarIcon className="h-4 w-4" />
-                  Calendar
-                </Button>
-              </Link>
-              <Link to="/payment-history">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Receipt className="h-4 w-4" />
-                  Payments
                 </Button>
               </Link>
               <Button variant="outline" size="sm" onClick={signOut} className="gap-2">
