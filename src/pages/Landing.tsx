@@ -114,6 +114,7 @@ const Landing = () => {
             {services.map((service) => (
               <ServiceCard
                 key={service.id}
+                id={service.id}
                 name={service.name}
                 description={service.description}
                 price={parseFloat(service.price)}

@@ -69,6 +69,11 @@ const BookingDialog = ({ open, onOpenChange, serviceId, onSuccess }: BookingDial
         variant: 'destructive'
       });
     } else {
+      // Send confirmation email
+      await supabase.functions.invoke('send-booking-email', {
+        body: { bookingId: data.id, type: 'confirmation' },
+      });
+
       setBookingId(data.id);
       setShowPayment(true);
     }

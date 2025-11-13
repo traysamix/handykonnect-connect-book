@@ -254,6 +254,17 @@ const Admin = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {selectedPayment && (
+        <RefundDialog
+          open={refundDialogOpen}
+          onOpenChange={setRefundDialogOpen}
+          paymentId={selectedPayment.id}
+          bookingId={selectedPayment.bookingId}
+          amount={selectedPayment.amount}
+          onSuccess={handleRefundSuccess}
+        />
+      )}
     </div>
   );
 };

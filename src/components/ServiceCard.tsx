@@ -1,8 +1,11 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, DollarSign } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Clock, DollarSign, MessageSquare } from 'lucide-react';
+import ReviewsList from './ReviewsList';
 
 interface ServiceCardProps {
+  id: string;
   name: string;
   description: string;
   price: number;
@@ -12,7 +15,7 @@ interface ServiceCardProps {
   isLoggedIn: boolean;
 }
 
-const ServiceCard = ({ name, description, price, duration, imageUrl, onBook, isLoggedIn }: ServiceCardProps) => {
+const ServiceCard = ({ id, name, description, price, duration, imageUrl, onBook, isLoggedIn }: ServiceCardProps) => {
   return (
     <Card className="overflow-hidden hover:shadow-medium transition-all duration-300 bg-gradient-card">
       <div className="h-48 overflow-hidden">
@@ -38,14 +41,27 @@ const ServiceCard = ({ name, description, price, duration, imageUrl, onBook, isL
           </div>
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex gap-2">
         <Button 
           onClick={onBook} 
-          className="w-full"
+          className="flex-1"
           disabled={!isLoggedIn}
         >
           {isLoggedIn ? 'Book Now' : 'Login to Book'}
         </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="icon">
+              <MessageSquare className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Reviews for {name}</DialogTitle>
+            </DialogHeader>
+            <ReviewsList serviceId={id} />
+          </DialogContent>
+        </Dialog>
       </CardFooter>
     </Card>
   );
