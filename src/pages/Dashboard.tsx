@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, MapPin, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import BookingDialog from '@/components/BookingDialog';
+import SupportChat from '@/components/SupportChat';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
@@ -96,17 +98,23 @@ const Dashboard = () => {
           <p className="text-muted-foreground">Manage your bookings and profile</p>
         </div>
 
-        <div className="grid gap-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Your Bookings</CardTitle>
-                  <CardDescription>View and manage your service appointments</CardDescription>
+        <Tabs defaultValue="bookings" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="bookings">Your Bookings</TabsTrigger>
+            <TabsTrigger value="chat">Support Chat</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="bookings">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Your Bookings</CardTitle>
+                    <CardDescription>View and manage your service appointments</CardDescription>
+                  </div>
+                  <Button onClick={() => navigate('/')}>Book New Service</Button>
                 </div>
-                <Button onClick={() => navigate('/')}>Book New Service</Button>
-              </div>
-            </CardHeader>
+              </CardHeader>
             <CardContent>
               {bookings.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">
@@ -155,7 +163,12 @@ const Dashboard = () => {
               )}
             </CardContent>
           </Card>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="chat">
+            <SupportChat />
+          </TabsContent>
+        </Tabs>
       </div>
 
       <BookingDialog
@@ -164,10 +177,7 @@ const Dashboard = () => {
         serviceId={selectedServiceId}
         onSuccess={() => {
           fetchBookings();
-          toast({
-            title: 'Success',
-            description: 'Booking created successfully!'
-          });
+          setBookDialogOpen(false);
         }}
       />
     </div>

@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Users, Wrench, Calendar, DollarSign } from 'lucide-react';
+import ServiceManagement from '@/components/ServiceManagement';
+import AdminChat from '@/components/AdminChat';
 
 const Admin = () => {
   const { user, loading } = useAuth();
@@ -166,10 +168,12 @@ const Admin = () => {
         </div>
 
         {/* Tabs Section */}
-        <Tabs defaultValue="bookings" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="bookings">Recent Bookings</TabsTrigger>
+        <Tabs defaultValue="bookings" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="clients">Clients</TabsTrigger>
+            <TabsTrigger value="services">Services</TabsTrigger>
+            <TabsTrigger value="chat">Support Chat</TabsTrigger>
           </TabsList>
           
           <TabsContent value="bookings" className="space-y-4">
@@ -252,19 +256,17 @@ const Admin = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="services">
+            <ServiceManagement />
+          </TabsContent>
+
+          <TabsContent value="chat">
+            <AdminChat />
+          </TabsContent>
         </Tabs>
       </div>
 
-      {selectedPayment && (
-        <RefundDialog
-          open={refundDialogOpen}
-          onOpenChange={setRefundDialogOpen}
-          paymentId={selectedPayment.id}
-          bookingId={selectedPayment.bookingId}
-          amount={selectedPayment.amount}
-          onSuccess={handleRefundSuccess}
-        />
-      )}
     </div>
   );
 };
