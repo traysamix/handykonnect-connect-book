@@ -35,13 +35,25 @@ const ReviewsList = ({ serviceId }: ReviewsListProps) => {
           rating,
           comment,
           created_at,
-          client:profiles(full_name)
+          client_id,
+          profiles!reviews_client_id_fkey(full_name)
         `)
         .eq('service_id', serviceId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setReviews(data || []);
+      
+      const formattedData = data?.map((review: any) => ({
+        id: review.id,
+        rating: review.rating,
+        comment: review.comment,
+        created_at: review.created_at,
+        client: {
+          full_name: review.profiles?.full_name || 'Unknown User'
+        }
+      })) || [];
+      
+      setReviews(formattedData);
     } catch (error) {
       console.error('Error fetching reviews:', error);
     } finally {
