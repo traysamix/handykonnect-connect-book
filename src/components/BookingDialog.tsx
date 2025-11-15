@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import PaymentForm from '@/components/PaymentForm';
+import PaymentMethodSelector from '@/components/PaymentMethodSelector';
 
 interface BookingDialogProps {
   open: boolean;
@@ -102,7 +102,7 @@ const BookingDialog = ({ open, onOpenChange, serviceId, onSuccess }: BookingDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={showPayment ? "sm:max-w-4xl" : "sm:max-w-md"}>
         <DialogHeader>
           <DialogTitle>Book {service.name}</DialogTitle>
           <DialogDescription>
@@ -154,7 +154,7 @@ const BookingDialog = ({ open, onOpenChange, serviceId, onSuccess }: BookingDial
           </form>
         ) : (
           bookingId && (
-            <PaymentForm
+            <PaymentMethodSelector
               bookingId={bookingId}
               amount={parseFloat(service.price)}
               onSuccess={handlePaymentSuccess}
