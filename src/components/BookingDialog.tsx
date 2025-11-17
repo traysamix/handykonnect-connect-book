@@ -69,9 +69,33 @@ const BookingDialog = ({ open, onOpenChange, serviceId, onSuccess }: BookingDial
         variant: 'destructive'
       });
     } else {
+      // Create payment record
+      const { data: payment } = await supabase
+        .from('payments')
+        .insert({
+          booking_id: data.id,
+          amount: service.price,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
       // Send confirmation email
       await supabase.functions.invoke('send-booking-email', {
         body: { bookingId: data.id, type: 'confirmation' },
+      });
+
+      // Send transaction alert
+      await supabase.functions.invoke('send-transaction-alert', {
+        body: {
+          type: 'booking',
+          status: 'pending',
+          customerName: user.user_metadata?.full_name || 'Client',
+          customerEmail: user.email,
+          serviceName: service.name,
+          bookingDate: scheduledDate,
+          transactionId: data.id,
+        },
       });
 
       setBookingId(data.id);

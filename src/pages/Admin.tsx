@@ -10,11 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Users, Wrench, Calendar, DollarSign } from 'lucide-react';
 import ServiceManagement from '@/components/ServiceManagement';
 import AdminChat from '@/components/AdminChat';
+import TransactionMonitor from '@/components/TransactionMonitor';
+import AdminInvitations from '@/components/AdminInvitations';
 
 const Admin = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<any>(null);
   const [stats, setStats] = useState({
     totalBookings: 0,
     totalRevenue: 0,
@@ -27,33 +28,14 @@ const Admin = () => {
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
-    }
-  }, [user, loading, navigate]);
-
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (profile?.role === 'client') {
+    } else if (!loading && user && !isAdmin) {
       navigate('/dashboard');
-    } else if (profile?.role === 'admin') {
+    } else if (user && isAdmin) {
       fetchStats();
       fetchBookings();
       fetchClients();
     }
-  }, [profile]);
-
-  const fetchProfile = async () => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user?.id)
-      .single();
-    setProfile(data);
-  };
+  }, [user, loading, isAdmin, navigate]);
 
   const fetchStats = async () => {
     const [bookingsRes, paymentsRes, clientsRes, servicesRes] = await Promise.all([
@@ -110,8 +92,12 @@ const Admin = () => {
     fetchBookings();
   };
 
-  if (loading || !profile) {
+  if (loading) {
     return <div>Loading...</div>;
+  }
+
+  if (!user || !isAdmin) {
+    return null;
   }
 
   return (
@@ -169,13 +155,23 @@ const Admin = () => {
 
         {/* Tabs Section */}
         <Tabs defaultValue="bookings" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            <TabsTrigger value="transactions">Transactions</TabsTrigger>
             <TabsTrigger value="clients">Clients</TabsTrigger>
             <TabsTrigger value="services">Services</TabsTrigger>
+            <TabsTrigger value="invitations">Admins</TabsTrigger>
             <TabsTrigger value="chat">Support Chat</TabsTrigger>
           </TabsList>
           
+          <TabsContent value="transactions" className="space-y-4">
+            <TransactionMonitor />
+          </TabsContent>
+
+          <TabsContent value="invitations" className="space-y-4">
+            <AdminInvitations />
+          </TabsContent>
+
           <TabsContent value="bookings" className="space-y-4">
             <Card>
               <CardHeader>
